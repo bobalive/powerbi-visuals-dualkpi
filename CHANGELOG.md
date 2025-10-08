@@ -1,5 +1,6 @@
 ## 2.2.1
 ### Visual changes
+**
 * Fix bug with swapping buckets
 * Fix high contrast mode for title
 * Disabled display units setting when abbreviative values setting is on
