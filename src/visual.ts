@@ -238,6 +238,7 @@ export class DualKpi implements IVisual {
     };
 
     private static INVISIBLE: string = "invisible";
+    private static readonly VISUAL_BORDER_AREA_PADDING_RATIO = 0.9;
 
     private static OPACITY_MIN: number = 0;
     private static OPACITY_MAX: number = 100;
@@ -490,12 +491,9 @@ export class DualKpi implements IVisual {
         this.eventService.renderingStarted(options)
         try {
             const dataView: DataView = this.dataView = options.dataViews && options.dataViews[0];
-            if (!dataView ||
-                !dataView.metadata ||
-                !dataView.metadata.columns) {
 
+            if (!dataView?.metadata?.columns || !dataView?.categorical?.values) {
                 this.displayRootElement(false);
-
                 return;
             }
 
@@ -533,7 +531,7 @@ export class DualKpi implements IVisual {
             this.eventService.renderingFinished(options)
         } catch (error) {
             this.eventService.renderingFailed(options, error);
-            console.error(error);
+            console.warn("Rendering error", error);
         }
     }
 
@@ -840,6 +838,7 @@ export class DualKpi implements IVisual {
             this.formattingSettings.colors.textColor.value.value = colorHelper.getHighContrastColor("foreground", this.formattingSettings.colors.textColor.value.value);
             this.formattingSettings.colorsBottom.dataColor.value.value = colorHelper.getHighContrastColor("foreground", this.formattingSettings.colorsBottom.dataColor.value.value);
             this.formattingSettings.colorsBottom.textColor.value.value = colorHelper.getHighContrastColor("foreground", this.formattingSettings.colorsBottom.textColor.value.value);
+            this.formattingSettings.properties.titleGroup.textColor.value.value = colorHelper.getHighContrastColor("foreground", this.formattingSettings.properties.titleGroup.textColor.value.value);
         }
     }
 
@@ -1499,6 +1498,16 @@ export class DualKpi implements IVisual {
         element.attr("font-style", isItalic ? "italic" : "normal");
         element.attr("text-decoration", isUnderline ? "underline" : "none");
         element.attr("font-family", fontFamily);
+
+        const effectiveFontSize = fontSizeAutoFormatting ? element.style("font-size") : fontSize + "px";
+        const tailoredText = textMeasurementService.getTailoredTextOrDefault({
+            text: element.text(),
+            fontSize: effectiveFontSize,
+            fontFamily: fontFamily,
+        }, options.width * DualKpi.VISUAL_BORDER_AREA_PADDING_RATIO);
+
+        element.text(tailoredText);
+
     }
 
     private addOverlayText(options: IDualKpiOptions, latestValue: number, calcHeight: number, calcWidth: number, isTopChart: boolean): void {
